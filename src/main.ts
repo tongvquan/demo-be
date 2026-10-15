@@ -6,7 +6,7 @@ async function bootstrap() {
     instrument: ObserveInstrument,
   });
   app.enableCors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:8080',
+    origin: process.env.FRONTEND_URL ?? 'http://api.quannook.site',
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
