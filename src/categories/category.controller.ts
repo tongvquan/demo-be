@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from 
 import { CategoryService } from './category.service.js';
 import type { CreateCategoryInput } from './category.service.js';
 
-@Controller('categories')
+@Controller('/api/categories')
 export class CategoryController {
   constructor(private readonly service: CategoryService) {}
 

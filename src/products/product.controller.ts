@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from 
 import { ProductService } from './product.service.js';
 import type { CreateProductInput } from './product.service.js';
 
-@Controller('products')
+@Controller('/api/products')
 export class ProductController {
   constructor(private readonly service: ProductService) {}
   @Get() findAll() { return this.service.findAll(); }
