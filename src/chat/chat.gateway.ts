@@ -1,45 +1,49 @@
-
 import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  SubscribeMessage,
-  MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
-
 import { Server, Socket } from 'socket.io';
+import { UsersService } from '../users/user.service.js';
+import { MessagesService } from '../messages/message.service.js';
 
-@WebSocketGateway({ //Khai báo một Gateway xử lý kết nối Socket.IO.
-  cors: {
-    origin: '*',
-  },
-})
-export class ChatGateway {
-  @WebSocketServer() //Lấy instance Server để chủ động phát sự kiện từ server.
-  server: Server;
+@WebSocketGateway({ cors: { origin: true } })
+export class ChatGateway implements OnGatewayConnection {
+  @WebSocketServer() server: Server;
 
-  // Client vừa kết nối
+  constructor(
+    private readonly users: UsersService,
+    private readonly messages: MessagesService,
+  ) {}
+
   handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+    const userId = client.handshake.auth?.userId as string | undefined;
+    const user = userId && this.users.findById(userId);
+    if (!user) {
+      client.disconnect(true);
+      return;
+    }
+    client.data.userId = user.id;
+    void client.join(user.id);
   }
 
-  // Client ngắt kết nối
-  handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-  }
-
-  // Lắng nghe sự kiện send_message
-  @SubscribeMessage('send_message') //Đăng ký hàm xử lý sự kiện mà client gửi lên có tên send_message.
-  handleMessage(
-    @MessageBody() data: { message: string }, //Lấy dữ liệu trong payload của sự kiện.
-    @ConnectedSocket() client: Socket, //Lấy socket của client đang gửi sự kiện.
+  @SubscribeMessage('message:send')
+  handleSend(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { to: string; content: string },
   ) {
-    console.log('Message:', data.message);
+    const from = client.data.userId as string;
+    const content = body?.content?.trim();
+    if (!from || !content || !this.users.findById(body.to)) return;
 
-    // Gửi sự kiện new_message đến tất cả client
-    this.server.emit('new_message', {
-      senderId: client.id,
-      message: data.message,
-    });
+    const msg = this.messages.add(from, body.to, content);
+    this.server.to(body.to).to(from).emit('message:new', msg);
+  }
+
+  broadcastUsers() {
+    this.server.emit('users:updated', this.users.findAll());
   }
 }
