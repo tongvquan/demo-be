@@ -5,6 +5,7 @@ import { AppService } from './app.service.js';
 import { CategoryModule } from './categories/category.module.js';
 import { ProductModule } from './products/product.module.js';
 import { ChatModule } from './chat/chat.module.js';
+import { JoinModule } from './join/join.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -20,6 +21,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appSecret: 'YOUR_APP_SECRET',
       serviceId: 'demo-be',
     }),
+    JoinModule,
   ],
   controllers: [AppController],
   providers: [AppService],

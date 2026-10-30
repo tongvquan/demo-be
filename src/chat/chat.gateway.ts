@@ -10,7 +10,7 @@ import { Server, Socket } from 'socket.io';
 import { UsersService } from '../users/user.service.js';
 import { MessagesService } from '../messages/message.service.js';
 
-@WebSocketGateway({ cors: { origin: true } })
+@WebSocketGateway({ namespace: 'message', cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer() server: Server;
 
