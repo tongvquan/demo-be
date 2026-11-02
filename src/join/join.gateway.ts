@@ -12,7 +12,7 @@ import { UsersService } from '../users/user.service.js';
 export class JoinGateway {
   @WebSocketServer() server: Server;
 
-  constructor(private readonly users: UsersService) {}
+  constructor(private readonly users: UsersService) { }
 
   @SubscribeMessage('join')
   handleJoin(
@@ -26,11 +26,19 @@ export class JoinGateway {
 
     const { user, isNew } = this.users.register(username);
     client.data.userId = user.id;
+    this.users.connect(user.id, client.id);
 
-    // Client dùng event này để render danh sách người có thể chọn để chat.
     this.server.emit('users:updated', this.users.findAll());
     if (isNew) this.server.emit('user:joined', user);
 
     return { event: 'join:success', data: { user, users: this.users.findAll() } };
+  }
+
+  handleDisconnect(client: Socket) {
+    const userId = client.data.userId;
+    if (!userId) return;
+    if (this.users.disconnect(userId, client.id)) {
+      this.server.emit('users:updated', this.users.findAll());
+    }
   }
 }
